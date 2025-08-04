@@ -1,11 +1,16 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, Users, Brain, GraduationCap } from 'lucide-react';
+import { Trophy, Users, Brain, GraduationCap, RotateCcw } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { setMode, setDifficulty, playerRating } = useGameStore();
+  const { setMode, setDifficulty, playerProgress, loadProgress } = useGameStore();
+
+  // Load progress on component mount
+  React.useEffect(() => {
+    loadProgress();
+  }, [loadProgress]);
 
   const startGame = (mode: 'pvp' | 'ai') => {
     setMode(mode);
@@ -15,7 +20,21 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-indigo-100 p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 relative">
+          <div className="absolute top-0 right-0">
+            <button
+              onClick={() => {
+                if (confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+                  useGameStore.getState().resetProgress();
+                  window.location.reload();
+                }
+              }}
+              className="p-2 text-red-600 hover:text-red-800 transition-colors"
+              title="Reset Progress"
+            >
+              <RotateCcw size={24} />
+            </button>
+          </div>
           <h1 className="text-5xl font-bold text-gray-900 mb-4">Chess Master</h1>
           <p className="text-xl text-gray-600">Enhance your chess skills and challenge opponents</p>
         </div>
@@ -94,10 +113,19 @@ export default function Home() {
               <h2 className="text-2xl font-semibold">Your Stats</h2>
             </div>
             <div className="space-y-3">
-              <p className="text-gray-600">Rating: <span className="font-semibold text-gray-900">{playerRating.rating}</span></p>
-              <p className="text-gray-600">Wins: <span className="font-semibold text-green-600">{playerRating.wins}</span></p>
-              <p className="text-gray-600">Losses: <span className="font-semibold text-red-600">{playerRating.losses}</span></p>
-              <p className="text-gray-600">Draws: <span className="font-semibold text-gray-600">{playerRating.draws}</span></p>
+              <p className="text-gray-600">Rating: <span className="font-semibold text-gray-900">{playerProgress.rating}</span></p>
+              <p className="text-gray-600">Best Rating: <span className="font-semibold text-blue-600">{playerProgress.bestRating}</span></p>
+              <p className="text-gray-600">Games Played: <span className="font-semibold text-gray-900">{playerProgress.gamesPlayed}</span></p>
+              <p className="text-gray-600">Wins: <span className="font-semibold text-green-600">{playerProgress.wins}</span></p>
+              <p className="text-gray-600">Losses: <span className="font-semibold text-red-600">{playerProgress.losses}</span></p>
+              <p className="text-gray-600">Draws: <span className="font-semibold text-gray-600">{playerProgress.draws}</span></p>
+              {playerProgress.gamesPlayed > 0 && (
+                <p className="text-gray-600">
+                  Win Rate: <span className="font-semibold text-purple-600">
+                    {Math.round((playerProgress.wins / playerProgress.gamesPlayed) * 100)}%
+                  </span>
+                </p>
+              )}
             </div>
           </div>
         </div>
